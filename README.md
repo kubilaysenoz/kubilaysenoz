@@ -1,4 +1,4 @@
-# Kubilay Senoz
+# KUBİLAY ŞENÖZ
 
 **Systems Architect | Industrial Designer | Agentic AI Engineer**
 
