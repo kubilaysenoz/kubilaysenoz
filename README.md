@@ -1,58 +1,65 @@
-# KUBİLAY ŞENÖZ
+<div align="center">
 
-**Systems Architect | Industrial Designer | Agentic AI Engineer**
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,9,5&height=220&section=header&text=Kubilay%20%C5%9Een%C3%B6z&fontSize=60&fontAlignY=35&animation=twinkling&fontColor=ffffff&desc=Systems%20Architect%20&bull;%20Agentic%20AI%20&bull;%20Hardware%20Engineering%20&bull;%20Generative%20Design&descSize=16&descAlignY=55" width="100%" />
 
-*Istanbul | kubilaysenoz@gmail.com*
+<br>
 
----
+<a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=Inter&weight=300&size=22&duration=4000&pause=2000&color=A0AEC0&center=true&vCenter=true&multiline=true&repeat=true&width=700&height=80&lines=I+architect+autonomous+systems+that+think+and+deploy.;From+embedded+circuits+to+generative+diffusion+pipelines.;Zero+human+intervention.+By+design." alt="Typing SVG" /></a>
 
-I architect systems that bridge **physical manufacturing** and **autonomous intelligence**. My work spans from engineering tactical hardware prototypes (FDM/SLA/SLS) and embedded IoT devices to designing multi-agent AI pipelines that operate with zero human intervention.
+</div>
 
-I don't prompt AI - I build the infrastructure that makes AI work autonomously.
+<br>
 
----
+| <img src="https://techstack-generator.vercel.app/python-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/js-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/ts-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/react-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/docker-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/raspberrypi-icon.svg" width="48" height="48" /> |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| **Python** | **JavaScript** | **TypeScript** | **React** | **Docker** | **RPi** |
+| <img src="https://techstack-generator.vercel.app/github-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/nginx-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/restapi-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/cpp-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/prettier-icon.svg" width="48" height="48" /> | <img src="https://techstack-generator.vercel.app/mysql-icon.svg" width="48" height="48" /> |
+| **GitHub** | **Nginx** | **REST API** | **C++** | **Prettier** | **SQL** |
 
-### Expertise
+<br>
 
-**Autonomous Systems & AI Architecture**
-Multi-agent orchestration, LLM pipeline design (Llama-3, GPT-4, Gemini), headless browser automation, end-to-end deployment workflows.
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
 
-**Advanced Manufacturing & Prototyping**
-Complete product lifecycle - from parametric CAD (Rhinoceros, Blender, ZBrush) through SLA/SLS/FDM optimization to production-ready G-Code and pre-serial validation.
+<br>
 
-**Embedded Systems & IoT**
-Arduino, Raspberry Pi, ESP32 integration into product architectures. Sensor fusion (I2C/SPI), real-time telemetry, PCB design.
+## &#9889; Expertise
 
-**Generative AI & Diffusion Models**
-Stable Diffusion XL, Flux, ComfyUI workflow architecture. LoRA and DreamBooth fine-tuning for niche industrial applications - not prompt engineering, model engineering.
+| &#129302; Autonomous Systems & AI | &#127399; Advanced Manufacturing |
+| :--- | :--- |
+| Multi-agent orchestration &bull; LLM pipeline engineering<br>Llama-3 &bull; GPT-4 &bull; Gemini &bull; Groq<br>Headless browser automation (Puppeteer/Playwright)<br>Self-healing deployment architectures | FDM / SLA / SLS production optimization<br>Rhinoceros &bull; Blender &bull; ZBrush &bull; SketchUp<br>G-Code generation &bull; Slicer automation<br>DFM analysis &bull; Pre-serial validation |
+| **&#9881;&#128225; Embedded Systems & IoT** | **&#127760; Full-Stack Engineering** |
+| Arduino &bull; Raspberry Pi &bull; ESP32<br>I2C/SPI sensor fusion &bull; Real-time telemetry<br>PCB design &bull; Smart optics integration<br>Tactical hardware prototyping | Python &bull; Node.js &bull; TypeScript &bull; React &bull; Next.js<br>PostgreSQL &bull; Firebase &bull; SQLite<br>REST/WebSocket APIs &bull; Docker &bull; Vercel<br>Linux server administration |
+| **&#127912; Generative AI & Diffusion** | **&#129482; Immersive & Spatial Computing** |
+| SDXL &bull; Flux &bull; ComfyUI workflow design<br>LoRA &amp; DreamBooth fine-tuning<br>ControlNet parametric generation<br>Custom training data pipelines | VR/AR/MR digital twin environments<br>Unreal Engine 5 &bull; Unity<br>Geospatial training simulations<br>Projection mapping for luxury retail |
 
-**Immersive Technologies**
-VR/AR/MR digital twins, geospatial simulation environments, projection mapping for professional training and luxury retail experiences.
+<br>
 
-**Full-Stack Engineering**
-Python, Node.js, TypeScript, React, Next.js. PostgreSQL, Firebase, REST/WebSocket APIs. Docker, Vercel, Linux infrastructure.
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
 
----
+<br>
 
-### Background
+## &#128300; Selected Work
 
-Former Product Manager at a luxury jewelry house - led end-to-end development of men's wristwatches and competition trophies, pioneered VR showroom experiences for high-end retail.
+| &#129471; [Agentic-CAD-Pipeline](https://github.com/kubilaysenoz/Agentic-CAD-Pipeline) | &#127919; [Tac-OS-Vision](https://github.com/kubilaysenoz/Tac-OS-Vision) |
+| :--- | :--- |
+| **Text &rarr; 3D Model &rarr; G-Code &rarr; 3D Printer**<br>Autonomous AI agent that converts natural language prompts into production-ready 3D models. Self-healing compilation loop with OpenSCAD.<br>`Python` `Groq API` `OpenSCAD` `PrusaSlicer CLI` | **Embedded Ballistic Simulation System**<br>Raspberry Pi-powered smart optic platform with YOLOv8 object tracking, environmental telemetry (BME280), and real-time trajectory computation.<br>`Python` `PyTorch` `Arduino` `Raspberry Pi` |
+| **&#128142; [Luxury-GenAI-Jewelry](https://github.com/kubilaysenoz/Luxury-GenAI-Jewelry)** | **&#129302; [Freelance-Arbitrage-Commander](https://github.com/kubilaysenoz/Freelance-Arbitrage-Commander)** |
+| **Fine-tuned Diffusion for Haute Joaillerie**<br>Specialized SDXL model and ComfyUI workflows for generating photorealistic luxury jewelry and horology concepts with accurate gem refractions.<br>`ComfyUI` `SDXL` `LoRA` `Kohya_ss` | **Autonomous Lead Gen & Proposal Engine**<br>Scrapes engineering job postings, qualifies via LLM filtering, generates proof-of-concept code, and delivers deterministic pitches.<br>`Node.js` `Puppeteer` `Groq API` `SQLite` |
 
-Currently building **autonomous operational systems** - from tactical equipment engineering to AI-driven automation platforms. Licensed Commercial UAV-2 pilot.
+<br>
 
-Delivered lectures on "Design and AI in the New World" at multiple Turkish universities. Board member in professional design and aviation associations.
+<img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif" width="100%">
 
----
+<br>
 
-### Selected Work
+<div align="center">
 
-| Project | Domain | Stack |
-|:---|:---|:---|
-| Agentic CAD Pipeline | Text-to-3D -> G-Code autonomous manufacturing | Python, OpenSCAD, Groq API |
-| Tac-OS Vision | Embedded ballistic simulation for tactical training | Raspberry Pi, YOLOv8, Arduino |
-| GenAI Jewelry Studio | Fine-tuned diffusion models for luxury product design | ComfyUI, SDXL, LoRA |
-| Arbitrage Commander | Autonomous lead generation and deployment pipeline | Node.js, Puppeteer, SQLite |
+### &#128128;
 
----
+*"I don't prompt AI &mdash; I build the infrastructure that makes AI work autonomously."*
 
-> I automate what others do manually. I engineer what others think is impossible.
+<br>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,9,5&height=120&section=footer&fontSize=0" width="100%" />
+
+</div>
