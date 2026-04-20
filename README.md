@@ -1,18 +1,8 @@
-<div align="center">
-<img src="https://capsule-render.vercel.app/api?type=rect&color=0d1117&height=1&section=header" width="100%" />
+# Kubilay Senoz
 
-<br>
+**Systems Architect | Industrial Designer | Agentic AI Engineer**
 
-<h1>Kubilay Senoz</h1>h1>
-
-<p><strong>Systems Architect | Industrial Designer | Agentic AI Engineer</strong>strong></p>p>
-
-<p>
-<em>Istanbul | kubilaysenoz@gmail.com</em>em>
-</p>p>
-
-<br>
-</div>
+*Istanbul | kubilaysenoz@gmail.com*
 
 ---
 
@@ -65,7 +55,4 @@ Delivered lectures on "Design and AI in the New World" at multiple Turkish unive
 
 ---
 
-<div align="center">
-  <sub>I automate what others do manually. I engineer what others think is impossible.</sub>sub>
-</div>div>
-</strong></h1>
+> I automate what others do manually. I engineer what others think is impossible.
