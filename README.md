@@ -15,7 +15,7 @@
 ### `> whoami`
 
 ```yaml
-name: Kubilay Senoz
+name: Kubilay Şenöz
 role: Full-Stack Systems Architect & Agentic AI Engineer
 location: Istanbul, Turkey
 clearance: Commercial UAV-2 Licensed Pilot
