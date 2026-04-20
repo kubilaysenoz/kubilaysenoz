@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- ANIMATED HEADER -->
-<img src="https://capsule-render.vercel.app/api?type=venom&color=0:0d1117,50:161b22,100:1f6feb&height=300&section=header&text=KUBILAY%20SENOZ&fontSize=90&fontColor=58a6ff&animation=twinkling&fontAlignY=35&desc=Systems%20Architect%20%7C%20Agentic%20AI%20%7C%20Hardware%20Engineering%20%7C%20Generative%20Design&descSize=18&descAlignY=55&descAlign=50" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=venom&color=0:0d1117,50:161b22,100:1f6feb&height=300&section=header&text=KAY%20%C5%9EEN%C3%96ZENOZ&fontSize=90&fontColor=58a6ff&animation=twinkling&fontAlignY=35&desc=Systems%20Architect%20%7C%20Agentic%20AI%20%7C%20Hardware%20Engineering%20%7C%20Generative%20Design&descSize=18&descAlignY=55&descAlign=50" width="100%" />
 
 <!-- TYPING ANIMATION -->
 <a href="https://git.io/typing-svg"><img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=800&size=28&duration=3000&pause=1000&color=58A6FF&center=true&vCenter=true&multiline=true&repeat=true&width=900&height=100&lines=%3E+I+don't+use+AI.+I+architect+autonomous+agents.;%3E+From+embedded+circuits+to+generative+diffusion+models.;%3E+If+it+can+be+automated%2C+it+should+be." alt="Typing SVG" /></a>
