@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>TakIR TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b0f16">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ BOOT ============ -->
+  <section id="screen-boot" class="screen is-active">
+    <div class="boot">
+      <div class="boot-logo">TakIR<span>TV</span></div>
+      <div class="boot-bar"><i id="boot-bar-fill"></i></div>
+      <div class="boot-msg" id="boot-msg">Başlatılıyor...</div>
+    </div>
+  </section>
+
+  <!-- ============ SETUP (ilk kurulum) ============ -->
+  <section id="screen-setup" class="screen">
+    <div class="setup">
+      <h1>Hoş geldin</h1>
+      <p class="muted">Başlamak için bir kanal listesi ekle. Sadece yayın hakkına sahip olduğun
+         ya da açıkça herkese açık olan kaynakları kullan.</p>
+      <div id="setup-form"></div>
+    </div>
+  </section>
+
+  <!-- ============ MAIN ============ -->
+  <section id="screen-main" class="screen">
+    <header class="topbar">
+      <div class="brand">TakIR<span>TV</span></div>
+      <nav class="tabs" id="tabs"></nav>
+      <div class="topbar-right">
+        <span class="pill" id="net-pill" hidden>çevrimdışı</span>
+        <span class="clock" id="clock">--:--</span>
+      </div>
+    </header>
+
+    <div class="columns">
+      <div class="col col-groups">
+        <div class="col-head" id="groups-head">Gruplar</div>
+        <div class="vlist" id="list-groups"><div class="vlist-inner"></div></div>
+      </div>
+      <div class="col col-channels">
+        <div class="col-head" id="channels-head">Kanallar</div>
+        <div class="vlist" id="list-channels"><div class="vlist-inner"></div></div>
+        <div class="col-foot" id="channels-foot"></div>
+      </div>
+      <div class="col col-detail">
+        <div class="detail" id="detail"></div>
+      </div>
+    </div>
+
+    <footer class="hintbar" id="hintbar"></footer>
+  </section>
+
+  <!-- ============ GUIDE ============ -->
+  <section id="screen-guide" class="screen">
+    <header class="topbar">
+      <div class="brand">Yayın Akışı</div>
+      <div class="topbar-right"><span class="clock" id="guide-clock">--:--</span></div>
+    </header>
+    <div class="guide">
+      <div class="guide-timebar" id="guide-timebar"></div>
+      <div class="guide-rows" id="guide-rows"></div>
+      <div class="guide-info" id="guide-info"></div>
+    </div>
+    <footer class="hintbar" id="guide-hint"></footer>
+  </section>
+
+  <!-- ============ SEARCH ============ -->
+  <section id="screen-search" class="screen">
+    <header class="topbar"><div class="brand">Ara</div></header>
+    <div class="search">
+      <div class="search-box"><span id="search-q" class="search-q"></span><i class="caret"></i></div>
+      <div class="kbd" id="kbd"></div>
+      <div class="search-results"><div class="vlist" id="list-search"><div class="vlist-inner"></div></div></div>
+    </div>
+    <footer class="hintbar" id="search-hint"></footer>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section id="screen-settings" class="screen">
+    <header class="topbar"><div class="brand">Ayarlar</div></header>
+    <div class="settings">
+      <div class="settings-nav" id="settings-nav"></div>
+      <div class="settings-body" id="settings-body"></div>
+    </div>
+    <footer class="hintbar" id="settings-hint"></footer>
+  </section>
+
+  <!-- ============ PLAYER ============ -->
+  <section id="screen-player" class="screen screen-player">
+    <video id="video" playsinline webkit-playsinline autoplay></video>
+
+    <div class="player-spinner" id="player-spinner"><i></i></div>
+
+    <div class="osd" id="osd">
+      <div class="osd-top">
+        <div class="osd-num" id="osd-num"></div>
+        <div class="osd-logo"><img id="osd-logo" alt=""></div>
+        <div class="osd-meta">
+          <div class="osd-name" id="osd-name"></div>
+          <div class="osd-group" id="osd-group"></div>
+          <div class="osd-prog" id="osd-prog"></div>
+          <div class="osd-progress"><i id="osd-progress-fill"></i></div>
+        </div>
+        <div class="osd-state" id="osd-state"></div>
+      </div>
+    </div>
+
+    <div class="zapper" id="zapper"><span id="zapper-digits"></span></div>
+
+    <div class="player-menu" id="player-menu">
+      <div class="pm-title" id="pm-title">Menü</div>
+      <div class="vlist pm-list" id="pm-list"><div class="vlist-inner"></div></div>
+    </div>
+
+    <div class="player-error" id="player-error">
+      <div class="pe-box">
+        <div class="pe-title" id="pe-title">Yayın açılamadı</div>
+        <div class="pe-msg" id="pe-msg"></div>
+        <div class="pe-hint" id="pe-hint"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OVERLAYS ============ -->
+  <div id="modal" class="modal"><div class="modal-box"><div class="modal-title" id="modal-title"></div><div class="modal-body" id="modal-body"></div><div class="modal-actions" id="modal-actions"></div></div></div>
+  <div id="toast" class="toast"></div>
+  <div id="safe-guide" class="safe-guide"></div>
+
+</div>
+
+<!-- Yayın motorları depoya gömülü: TV disariya çıkamasa da çalışır. -->
+<script src="vendor/hls.min.js"></script>
+<script src="vendor/mpegts.js"></script>
+
+<script src="js/compat.js"></script>
+<script src="js/store.js"></script>
+<script src="js/http.js"></script>
+<script src="js/m3u.js"></script>
+<script src="js/xmltv.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/vlist.js"></script>
+<script src="js/player.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/settings-screen.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
