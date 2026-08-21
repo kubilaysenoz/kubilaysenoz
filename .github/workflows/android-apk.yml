@@ -48,14 +48,39 @@ jobs:
         working-directory: iptv/android
         run: gradle assembleDebug --no-daemon --stacktrace
 
-      - name: APK bilgisi
+      - name: APK içeriğini doğrula
         run: |
           set -e
           APK=$(find iptv/android/app/build/outputs/apk -name '*.apk' | head -1)
+          test -n "$APK" || { echo "APK üretilmemiş"; exit 1; }
           echo "APK: $APK  ($(du -h "$APK" | cut -f1))"
-          # gömülü web uygulaması gerçekten içeride mi?
-          unzip -l "$APK" | grep -E 'assets/web/(index.html|playlists/turkiye.m3u)' || {
-            echo "web uygulaması APK içine girmemiş"; exit 1; }
+
+          LIST=$(unzip -Z1 "$APK")
+
+          # gömülü web uygulaması ve kanal listeleri gerçekten içeride mi?
+          for f in assets/web/index.html \
+                   assets/web/css/app.css \
+                   assets/web/js/app.js \
+                   assets/web/js/player.js \
+                   assets/web/vendor/hls.min.js \
+                   assets/web/vendor/mpegts.js \
+                   assets/web/playlists/turkiye.m3u \
+                   assets/web/playlists/dunya.m3u \
+                   classes.dex \
+                   AndroidManifest.xml; do
+            echo "$LIST" | grep -qx "$f" || { echo "APK içinde yok: $f"; exit 1; }
+          done
+
+          # TV afişi (aapt dosya adını değiştirebilir, gevşek arıyoruz)
+          echo "$LIST" | grep -qi 'banner' || { echo "TV afişi APK içinde yok"; exit 1; }
+
+          TR=$(unzip -p "$APK" assets/web/playlists/turkiye.m3u | grep -c '^#EXTINF')
+          DU=$(unzip -p "$APK" assets/web/playlists/dunya.m3u | grep -c '^#EXTINF')
+          echo "gömülü kanallar -> Türkiye: $TR, Dünya: $DU"
+          test "$TR" -gt 150 || { echo "Türkiye paketi eksik"; exit 1; }
+          test "$DU" -gt 9000 || { echo "Dünya paketi eksik"; exit 1; }
+
+          echo "APK bütün: web uygulaması, iki kanal paketi ve iki yayın motoru içeride"
 
       - name: APK'yı yükle
         uses: actions/upload-artifact@v4
