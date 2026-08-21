@@ -9,7 +9,7 @@ var SHELL = [
   './js/nav.js', './js/vlist.js', './js/player.js', './js/ui.js',
   './js/screens.js', './js/settings-screen.js', './js/app.js',
   './vendor/hls.min.js', './vendor/mpegts.js',
-  './manifest.webmanifest'
+  './manifest.webmanifest', './version.json'
 ];
 
 self.addEventListener('install', function (e) {

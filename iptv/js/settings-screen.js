@@ -139,6 +139,10 @@
                  desc: 'Uygulamayla gelen açık katalog — 175 ülke',
                  value: '10.476 kanal',
                  fn: function () { SettingsScreen.addBundled('dunya'); } });
+        f.push({ type: 'action', cls: 'fld-btn', name: '+ Ortak liste (GitHub)',
+                 desc: 'Depodaki listeyi çeker. Listeyi bir kez güncellersin, ' +
+                       'bütün cihazlar yenilediğinde alır.',
+                 fn: function () { SettingsScreen.addShared(); } });
 
       } else if (id === 'epg') {
         f.push({ type: 'sep', name: 'Kaynak' });
@@ -245,6 +249,14 @@
         f.push({ type: 'action', name: 'NOMADS INDUSTRY IPTV', value: App.VERSION, desc: 'Kumanda ile kullanılan M3U/Xtream oynatıcı', fn: function () {} });
         f.push({ type: 'action', name: 'Toplam kanal', value: String(App.channels.length), fn: function () {} });
         f.push({ type: 'action', name: 'Depolama kullanımı', value: UI.bytes(Store.usage()), fn: function () {} });
+        f.push({ type: 'action', cls: 'fld-btn', name: 'Güncelleme denetle',
+                 value: App.updateInfo
+                   ? (App.updateInfo.newer ? 'Yeni: ' + App.updateInfo.version : 'Güncel')
+                   : '',
+                 desc: App.updateInfo && App.updateInfo.newer
+                   ? (App.updateInfo.notes || '')
+                   : 'Depodaki version.json ile karşılaştırır',
+                 fn: function () { SettingsScreen.doUpdateCheck(); } });
         f.push({ type: 'sep', name: 'Bu TV neyi destekliyor?' });
         f.push({ type: 'action', name: 'MSE (hls.js / mpegts.js)', value: C.mse ? 'Var' : 'Yok', fn: function () {} });
         f.push({ type: 'action', name: 'Yerleşik HLS (.m3u8)', value: C.nativeHls ? 'Var' : 'Yok', fn: function () {} });
@@ -388,6 +400,67 @@
         }
         SettingsScreen.paint();
         App.refreshViews();
+      });
+    },
+
+    /* Uzaktan güncellenen ortak liste. Gömülü paket ilk günden çalışsın diye
+       duruyor; bu ise listeyi tek yerden yönetmek isteyenler için. */
+    addShared: function () {
+      var base = String(Settings.get('sharedListBase') || '').trim();
+      if (!base) { UI.toast('Ortak liste adresi tanımlı değil'); return; }
+      UI.modal({
+        title: 'Ortak liste',
+        html: '<p>Hangi paketi çekelim? Liste depodan indirilir; ' +
+              'sen listeyi güncellediğinde bütün cihazlar <b>Yeşil tuş</b> ile yenileyip alır.</p>' +
+              '<p class="fld-desc" style="margin-top:.6rem;word-break:break-all">' + esc(base) + '</p>',
+        actions: [
+          { label: 'Türkiye', fn: function () { SettingsScreen.addRemote('Ortak liste: Türkiye', base + 'turkiye.m3u'); } },
+          { label: 'Dünya', fn: function () { SettingsScreen.addRemote('Ortak liste: Dünya', base + 'dunya.m3u'); } },
+          { label: 'Vazgeç' }
+        ]
+      });
+    },
+
+    addRemote: function (name, url) {
+      var all = Playlists.all(), i;
+      for (i = 0; i < all.length; i++) {
+        if (all[i].url === url) { UI.toast(name + ' zaten ekli'); return; }
+      }
+      var p = Playlists.add({ name: name, type: 'm3u', url: url });
+      UI.toast(name + ' indiriliyor...');
+      App.loadPlaylist(p, true, function (err) {
+        if (err) {
+          UI.modal({
+            title: 'Ortak liste alınamadı',
+            text: err.message + '\n\nAdres henüz yayında olmayabilir (dal birleştirilmemişse). ' +
+                  'Gömülü paketler her hâlükârda çalışır.',
+            actions: [{ label: 'Kapat' }]
+          });
+          Playlists.remove(p.id);
+          SettingsScreen.paint();
+          return;
+        }
+        SettingsScreen.paint();
+        App.refreshViews();
+      });
+    },
+
+    doUpdateCheck: function () {
+      UI.toast('Denetleniyor...');
+      App.checkUpdate('quiet', function (err, info) {
+        if (err) { UI.toast('Denetlenemedi: ' + err.message, 5000); SettingsScreen.paint(); return; }
+        SettingsScreen.paint();
+        if (!info || !info.newer) { UI.toast('En güncel sürümü kullanıyorsun (' + App.VERSION + ')'); return; }
+        UI.modal({
+          title: 'Yeni sürüm: ' + info.version,
+          html: '<p>' + esc(info.notes || '') + '</p>' +
+                '<p style="margin-top:.8rem" class="fld-desc">Kurulu sürüm: ' + esc(App.VERSION) + '</p>' +
+                (info.apk ? '<p style="margin-top:.8rem;word-break:break-all;font-size:.85rem">' +
+                            esc(info.apk) + '</p>' +
+                            '<p class="fld-desc" style="margin-top:.4rem">Bu adresi bilgisayarından indirip ' +
+                            'APK\'yı TV\'ye kur. Tarayıcıdan kullanıyorsan sayfayı yenilemen yeterli.</p>' : ''),
+          actions: [{ label: 'Tamam' }]
+        });
       });
     },
 

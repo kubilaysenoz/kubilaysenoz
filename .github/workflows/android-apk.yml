@@ -9,7 +9,7 @@ on:
       - '.github/workflows/android-apk.yml'
 
 permissions:
-  contents: read
+  contents: write   # rolling "latest" sürümünü güncellemek için
 
 jobs:
   build:
@@ -81,11 +81,43 @@ jobs:
           test "$DU" -gt 9000 || { echo "Dünya paketi eksik"; exit 1; }
 
           echo "APK bütün: web uygulaması, iki kanal paketi ve iki yayın motoru içeride"
+          cp "$APK" nomads-industry-iptv.apk
+          echo "APK_OUT=nomads-industry-iptv.apk" >> "$GITHUB_ENV"
 
-      - name: APK'yı yükle
+      - name: APK'yı iş çıktısı olarak yükle
         uses: actions/upload-artifact@v4
         with:
           name: nomads-industry-iptv-apk
           path: iptv/android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 90
+
+      # Actions çıktılarını indirmek için GitHub hesabı gerekiyor. Kurulumu
+      # paylaşacağın kişilerin hesabı olmayabilir; bu yüzden APK ayrıca sabit
+      # bir "latest" sürümüne konuyor. O bağlantı herkese açık ve değişmiyor:
+      #   https://github.com/<kullanıcı>/<depo>/releases/download/latest/nomads-industry-iptv.apk
+      - name: Sabit indirme bağlantısını güncelle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          NOTES=$(printf '%s\n' \
+            "NOMADS INDUSTRY IPTV — Android TV uygulaması." \
+            "" \
+            "Bu bağlantı hep en son derlemeyi verir; GitHub hesabı gerekmez." \
+            "" \
+            "Kurulum: TV'de Ayarlar → Cihaz tercihleri → Güvenlik → Bilinmeyen" \
+            "kaynaklar'a izin ver, sonra APK'yı USB ya da 'Send Files to TV' ile" \
+            "TV'ye at ve kur." \
+            "" \
+            "Derleme: ${GITHUB_SHA}")
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest "$APK_OUT" --clobber
+            gh release edit latest --notes "$NOTES"
+          else
+            gh release create latest "$APK_OUT" \
+              --title "NOMADS INDUSTRY IPTV (son sürüm)" \
+              --notes "$NOTES" \
+              --prerelease
+          fi
+          echo "indirme bağlantısı: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/download/latest/nomads-industry-iptv.apk"

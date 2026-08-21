@@ -203,6 +203,45 @@
       App.epgTimer = w.setInterval(function () { App.loadEpg(true); }, h * 3600000);
     },
 
+    /* ---------------- sürüm kontrolü ----------------
+       Beş on cihazlı özel bir kurulumda asıl dert güncelleme: her TV'yi elle
+       gezmek istemezsin. Uygulama depodaki version.json'a bakıp yeni sürüm
+       olduğunda haber veriyor; APK bağlantısını da oradan alıyor. */
+    updateInfo: null,
+
+    checkUpdate: function (force, cb) {
+      var url = String(Settings.get('updateUrl') || '').trim();
+      if (!url) { if (cb) cb(new Error('Güncelleme adresi tanımlı değil')); return; }
+      if (!force) {
+        var last = Settings.get('lastUpdateCheck') || 0;
+        if ((Date.now() - last) < 24 * 3600000) { if (cb) cb(null, App.updateInfo); return; }
+      }
+      Http.text(url, { timeout: 15000 }, function (err, txt) {
+        Settings.set('lastUpdateCheck', Date.now());
+        if (err) { if (cb) cb(err); return; }
+        var info;
+        try { info = JSON.parse(txt); } catch (e) { if (cb) cb(new Error('Sürüm dosyası okunamadı')); return; }
+        info.newer = App.newerThan(info.version, App.VERSION);
+        App.updateInfo = info;
+        if (info.newer && force !== 'quiet') {
+          UI.toast('Yeni sürüm var: ' + info.version, 5000);
+        }
+        if (cb) cb(null, info);
+      });
+    },
+
+    /* "1.2.10" > "1.2.9" doğru çıksın diye parça parça sayısal karşılaştırma */
+    newerThan: function (a, b) {
+      var x = String(a || '').split('.'), y = String(b || '').split('.'), i, n, m;
+      for (i = 0; i < Math.max(x.length, y.length); i++) {
+        n = parseInt(x[i], 10) || 0;
+        m = parseInt(y[i], 10) || 0;
+        if (n > m) return true;
+        if (n < m) return false;
+      }
+      return false;
+    },
+
     testProxy: function () {
       var p = String(Settings.get('proxyUrl') || '').trim();
       if (!p) { UI.toast('Önce vekil adresini yaz'); return; }
@@ -721,6 +760,7 @@
         }
         App.loadEpg(false);
         App.scheduleEpg();
+        w.setTimeout(function () { App.checkUpdate(false); }, 6000);
       }
       for (var i = 0; i < pls.length; i++) {
         App.loadPlaylist(pls[i], false, function () {

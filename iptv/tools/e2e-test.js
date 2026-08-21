@@ -480,6 +480,29 @@ const fixtureServer = http.createServer((req, res) => {
       if (pl) { Playlists.remove(pl.id); App.refreshAll(false); }
     });
 
+    /* 14e. surum karsilastirma mantigi */
+    const ver = await page.evaluate(() => ({
+      a: App.newerThan('1.0.1', '1.0.0'),
+      b: App.newerThan('1.2.10', '1.2.9'),
+      c: App.newerThan('1.0.0', '1.0.0'),
+      d: App.newerThan('0.9.9', '1.0.0'),
+      e: App.newerThan('2.0', '1.9.9')
+    }));
+    check('sürüm karşılaştırması doğru',
+          ver.a && ver.b && !ver.c && !ver.d && ver.e,
+          JSON.stringify(ver));
+
+    /* 14f. surum kontrolu gercek bir version.json okuyor mu */
+    const upd = await page.evaluate(() => new Promise(resolve => {
+      Settings.set('updateUrl', 'version.json');
+      Settings.set('lastUpdateCheck', 0);
+      App.checkUpdate('quiet', function (err, info) {
+        resolve(err ? { error: err.message } : { version: info.version, newer: info.newer, apk: !!info.apk });
+      });
+    }));
+    check('version.json okunuyor', upd.version === '1.0.0', JSON.stringify(upd));
+    check('kurulu sürüm güncel görünüyor', upd.newer === false);
+
     /* 15. overscan / olcek */
     await page.evaluate(() => { Settings.set('uiScale', 130); Settings.set('safeArea', 5); UI.applyScale(); });
     await page.waitForTimeout(200);

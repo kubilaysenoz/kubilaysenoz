@@ -83,7 +83,13 @@
     lockedGroups: [],
     pin: '',
     lastChannelId: '',
-    lastGroup: ''
+    lastGroup: '',
+
+    /* Küçük, özel bir kurulum için: listeyi tek yerden güncelle, bütün
+       cihazlar oradan çeksin. Boş bırakılırsa güncelleme kontrolü yapılmaz. */
+    updateUrl: 'https://raw.githubusercontent.com/kubilaysenoz/kubilaysenoz/main/iptv/version.json',
+    lastUpdateCheck: 0,
+    sharedListBase: 'https://raw.githubusercontent.com/kubilaysenoz/kubilaysenoz/main/iptv/playlists/'
   };
 
   var settings = null;

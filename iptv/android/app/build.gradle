@@ -15,6 +15,7 @@ tasks.register('syncWebApp', Copy) {
         include 'index.html'
         include 'sw.js'
         include 'manifest.webmanifest'
+        include 'version.json'
         include 'css/**'
         include 'js/**'
         include 'vendor/**'

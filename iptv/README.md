@@ -27,6 +27,7 @@ Kendi M3U adresini ya da Xtream Codes hesabını da ekleyebilirsin.
 - 10.000 kanallı listelerde bile akıcı gezinme (sanal liste)
 - Overscan (kenar payı) ve arayüz boyutu ayarı — eski TV'lerde kenarlar kesilirse
 - Çevrimdışı çalışma: uygulama dosyaları servis çalışanıyla önbelleklenir
+- Merkezden güncellenen ortak kanal listesi ve sürüm bildirimi
 
 `hls.js` ve `mpegts.js` depoya gömülüdür; TV dışarıya bir CDN'e çıkamasa da çalışır.
 
@@ -92,6 +93,58 @@ gradle assembleDebug
 
 Web uygulaması derleme sırasında `assets/web/` içine kopyalanır — tek kaynak,
 tarayıcıda ve APK'da aynı kod çalışır.
+
+---
+
+## Birkaç kişilik özel kurulum
+
+Bu proje ticari bir servis değil; birkaç TV'ye kurulup kullanılmak üzere tasarlandı.
+Ona göre üç kolaylık var.
+
+### 1. Herkesin indirebileceği tek bağlantı
+
+Actions çıktısını indirmek için GitHub hesabı gerekir — kuracağın kişilerde
+olmayabilir. Bu yüzden her derlemede sabit bir sürüm güncelleniyor:
+
+```
+https://github.com/kubilaysenoz/kubilaysenoz/releases/download/latest/nomads-industry-iptv.apk
+```
+
+Bu adres değişmez, hesap istemez. Kuracağın kişiye bunu gönder, yeter.
+
+### 2. Listeyi bir kez güncelle, bütün cihazlar alsın
+
+APK'nın içindeki paketler ilk günden çalışır ama sabittir. Listeyi merkezden
+yönetmek istersen **Ayarlar → Kanal listeleri → + Ortak liste (GitHub)** ile
+depodaki listeye bağlan. Sonra sende:
+
+```bash
+node iptv/tools/build-playlist.js --countries tr --validate --out iptv/playlists/turkiye.m3u
+git commit -am "liste güncellendi" && git push
+```
+
+Diğer cihazlarda tek yapılacak: kanal listesinde **Yeşil tuş** (listeyi yenile).
+Uygulamayı yeniden kurmak gerekmez.
+
+### 3. Sürüm bildirimi
+
+Uygulama günde bir kez depodaki `version.json` dosyasına bakar ve yeni sürüm
+varsa haber verir (**Ayarlar → Hakkında ve tanı → Güncelleme denetle**).
+Yeni APK çıkardığında `iptv/version.json` içindeki `version` alanını yükselt;
+herkes kendi TV'sinde görür.
+
+### Dikkat: bu depo herkese açık
+
+Profil deposu olduğu için içeriği herkes görebilir. Bu yüzden:
+
+- **Abonelik bilgilerini (Xtream kullanıcı adı/şifresi, özel M3U adresi) asla
+  depoya koyma.** Bunları her cihazda **Ayarlar → Kanal listeleri** üzerinden
+  gir; yalnızca o cihazda saklanırlar, hiçbir yere gönderilmezler.
+- Özel bir liste paylaşman gerekiyorsa ayrı bir **private** depo ya da secret
+  gist kullan ve adresini yalnızca cihaz ayarlarına yaz.
+
+Uygulama hiçbir yere veri göndermez: analitik yok, hesap yok, sunucu yok.
+Ne izlediğin yalnızca o TV'nin kendi hafızasında kalır.
 
 ---
 
@@ -276,6 +329,7 @@ iptv/
   js/settings-screen.js   ayarlar ve liste yönetimi
   js/app.js               durum, oynatıcı arayüzü, açılış
   sw.js                   servis çalışanı (yalnızca uygulama dosyaları)
+  version.json            sürüm bildirimi için sürüm/APK bilgisi
   vendor/                 hls.js, mpegts.js
   playlists/              hazır kanal listeleri (Türkiye, Dünya)
   tools/server.js         yerel sunucu + yayın vekili (tarayıcı yolu için)
