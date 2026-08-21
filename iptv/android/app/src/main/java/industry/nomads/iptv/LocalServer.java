@@ -18,8 +18,10 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Uygulamanın içinde çalışan küçük HTTP sunucusu. İki iş yapar:
@@ -45,12 +47,32 @@ class LocalServer implements Runnable {
     private final ExecutorService pool = Executors.newFixedThreadPool(8);
     private volatile boolean running = true;
 
+    /* Soket bağlanana kadar sayfayı yüklemeye kalkarsak bağlantı reddedilir ve
+       kullanıcı bomboş siyah ekran görür. Bu mandal, "dinlemeye başladım"
+       sinyalini veriyor. */
+    private final CountDownLatch ready = new CountDownLatch(1);
+    private volatile Exception startError;
+
     LocalServer(AssetManager assets, int port) {
         this.assets = assets;
         this.port = port;
     }
 
     int port() { return port; }
+
+    /** Sunucu dinlemeye başlayana kadar bekler. @return başarıyla açıldıysa true */
+    boolean awaitReady(long millis) {
+        try {
+            if (!ready.await(millis, TimeUnit.MILLISECONDS)) return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+        return startError == null;
+    }
+
+    /** Açılış başarısızsa sebebi; başarılıysa null. */
+    Exception startError() { return startError; }
 
     void stop() {
         running = false;
@@ -62,6 +84,15 @@ class LocalServer implements Runnable {
     public void run() {
         try {
             socket = new ServerSocket(port, 32, InetAddress.getByName("127.0.0.1"));
+        } catch (Exception e) {
+            startError = e;
+            android.util.Log.e("NomadsServer", "sunucu açılamadı (port " + port + ")", e);
+            ready.countDown();
+            return;
+        }
+        ready.countDown();   /* buradan sonra bağlantı kabul ediliyor */
+
+        try {
             while (running) {
                 final Socket client = socket.accept();
                 pool.execute(new Runnable() {

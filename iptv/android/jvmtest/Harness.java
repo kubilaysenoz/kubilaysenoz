@@ -35,6 +35,15 @@ public final class Harness {
         t.setDaemon(false);
         t.start();
 
+        /* MainActivity ile aynı yolu izliyoruz: sayfayı yüklemeden önce
+           sunucunun gerçekten dinlediğini bekle. */
+        if (!server.awaitReady(8000)) {
+            System.out.println("HATA " + (server.startError() == null
+                    ? "zaman aşımı" : server.startError().getMessage()));
+            System.out.flush();
+            System.exit(2);
+        }
+
         System.out.println("HAZIR " + port);
         System.out.flush();
 

@@ -3,7 +3,7 @@
   'use strict';
 
   var App = {
-    VERSION: '1.0.0',
+    VERSION: '1.0.1',
     channels: [],
     byId: {},
     counts: {},
