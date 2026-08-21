@@ -66,6 +66,7 @@ jobs:
                    assets/web/vendor/mpegts.js \
                    assets/web/playlists/turkiye.m3u \
                    assets/web/playlists/dunya.m3u \
+                   assets/web/version.json \
                    classes.dex \
                    AndroidManifest.xml; do
             echo "$LIST" | grep -qx "$f" || { echo "APK içinde yok: $f"; exit 1; }
@@ -73,6 +74,19 @@ jobs:
 
           # TV afişi (aapt dosya adını değiştirebilir, gevşek arıyoruz)
           echo "$LIST" | grep -qi 'banner' || { echo "TV afişi APK içinde yok"; exit 1; }
+
+          # Uygulama sınıfları gerçekten derlendi mi? classes.dex yalnızca üretilen
+          # R sınıflarını içerebiliyor, asıl kod classes2.dex'e düşüyor. Sadece
+          # "classes.dex var mı" diye bakmak, kodu hiç derlenmemiş bir APK'yı da
+          # geçirir; o APK kurulur ama açılışta çöker.
+          APKABS=$(readlink -f "$APK")
+          rm -rf /tmp/dexcheck && mkdir -p /tmp/dexcheck
+          (cd /tmp/dexcheck && unzip -o -q "$APKABS" 'classes*.dex')
+          for cls in MainActivity LocalServer; do
+            grep -qa "industry/nomads/iptv/$cls" /tmp/dexcheck/classes*.dex \
+              || { echo "derlenmiş sınıf APK içinde yok: $cls"; exit 1; }
+          done
+          echo "derlenmiş sınıflar doğrulandı ($(ls /tmp/dexcheck | tr '\n' ' '))"
 
           TR=$(unzip -p "$APK" assets/web/playlists/turkiye.m3u | grep -c '^#EXTINF')
           DU=$(unzip -p "$APK" assets/web/playlists/dunya.m3u | grep -c '^#EXTINF')
