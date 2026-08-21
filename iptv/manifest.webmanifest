@@ -1,6 +1,6 @@
 {
-  "name": "TakIR TV",
-  "short_name": "TakIR TV",
+  "name": "NOMADS INDUSTRY IPTV",
+  "short_name": "NOMADS INDUSTRY IPTV",
   "description": "Kumanda ile kullanilan M3U / Xtream IPTV oynatici",
   "start_url": "./index.html",
   "display": "fullscreen",

@@ -4,7 +4,7 @@
 (function (w) {
   'use strict';
 
-  var NS = 'takirtv.';
+  var NS = 'nomads.';
   var mem = {};                 /* localStorage yoksa / dolduysa yedek */
   var ok = w.CAPS.storage;
 

@@ -1,11 +1,15 @@
-# TakIR TV
+# NOMADS INDUSTRY IPTV
 
-Philips (ve diğer) akıllı TV'lerin tarayıcısında, **kumandayla** kullanılan bir IPTV
-oynatıcı. Tek sayfa, kurulum gerektirmez, derleme adımı yok.
+Philips (ve diğer) akıllı TV'lerde **kumandayla** kullanılan bir IPTV oynatıcı.
+İki şekilde çalışır: TV tarayıcısında bir web sayfası olarak, ya da Android TV'ye
+kurulan bir **APK** olarak.
 
-> **Bu uygulama içerik sağlamaz.** Kanal yayını, abonelik ya da hazır liste
-> içermez. Yalnızca *senin verdiğin* M3U/Xtream adresini oynatır. Kullandığın
-> kaynağın yayın hakkına sahip olduğundan emin ol.
+Kutudan **10.476 kanal** çıkar (175 ülke) — bunlar iptv-org açık kataloğundan
+derlenmiştir: yayıncıların kendi sitelerinde herkese açık sunduğu akışlar.
+Kendi M3U adresini ya da Xtream Codes hesabını da ekleyebilirsin.
+
+> **Şifreli/ücretli kanalların korsan bağlantıları bu depoda yok ve olmayacak.**
+> Kendi eklediğin kaynağın yayın hakkına sahip olduğundan emin olmak sana ait.
 
 ---
 
@@ -55,6 +59,42 @@ kaynakların varsa Yol A'yı kullan ya da ayarlardan bir vekil adresi tanımla.
 
 ---
 
+## Android TV uygulaması (APK)
+
+Philips'in **Android TV / Google TV** modellerinde tarayıcı açmakla uğraşmak yerine
+uygulamayı kurabilirsin. APK'yı GitHub derliyor:
+
+1. Depoda **Actions** → **APK derle** → son çalıştırma → **Artifacts** →
+   `nomads-industry-iptv-apk` indir, zip'ten `app-debug.apk` çıkar.
+   (Hiç çalışmadıysa: **Run workflow** ile elle başlat.)
+2. TV'de **Ayarlar → Cihaz tercihleri → Güvenlik → Bilinmeyen kaynaklar**'a izin ver.
+3. APK'yı TV'ye at: USB bellek + bir dosya yöneticisi, ya da bilgisayardan
+   `adb install app-debug.apk`, ya da "Send Files to TV" tipi bir uygulama.
+4. Ana ekranda **NOMADS INDUSTRY IPTV** görünür.
+
+**APK neden tarayıcıdan iyi:** uygulamanın içinde küçük bir HTTP sunucusu ve vekil
+çalışıyor (`LocalServer.java`). Sayfa `http://127.0.0.1` üzerinden açıldığı için:
+
+- karışık içerik engeli hiç devreye girmiyor — `http://` yayınlar doğrudan oynuyor,
+- CORS başlıkları vekil tarafından ekleniyor,
+- `User-Agent` / `Referer` ayarlanabiliyor,
+- kanal listeleri APK'nın içinde geliyor, PC'ye ya da ağda ikinci bir cihaza gerek yok.
+
+Yani `tools/server.js`'i çalıştırmana gerek kalmıyor; o yalnızca tarayıcı yolu için.
+
+Kendin derlemek istersen (Android SDK kurulu bir makinede):
+
+```bash
+cd iptv/android
+gradle assembleDebug
+# app/build/outputs/apk/debug/app-debug.apk
+```
+
+Web uygulaması derleme sırasında `assets/web/` içine kopyalanır — tek kaynak,
+tarayıcıda ve APK'da aynı kod çalışır.
+
+---
+
 ## Philips TV'de açmak
 
 | Model / yazılım | Nasıl |
@@ -74,9 +114,50 @@ Kenar payı değerini 3–5 % yap. Yazılar küçük geliyorsa Arayüz boyutunu 
 
 ---
 
-## Kanal listesi ekleme
+## Kanal listeleri
 
-İlk açılışta kurulum ekranı gelir. Sonradan: **Ayarlar → Kanal listeleri**.
+### Hazır paketler (uygulamayla geliyor)
+
+| Paket | İçerik |
+|---|---|
+| **Türkiye** | 208 kanal |
+| **Dünya** | 175 ülke, 10.476 kanal |
+
+İlk açılıştaki kurulum ekranından ya da **Ayarlar → Kanal listeleri → Hazır listeler**
+ile tek tuşla eklenir. `iptv/playlists/` altında dururlar, uygulamayla aynı yerden
+okunurlar — dış bir sunucuya, CORS'a ya da vekile ihtiyaç duymazlar.
+
+Bu paketler **iptv-org açık kataloğundan** derlenmiştir: yayıncıların kendi
+sitelerinde herkese açık sunduğu akışlar. Şifreli/ücretli kanalların korsan
+bağlantılarını içermez.
+
+### Listeyi kendin üretmek
+
+```bash
+# Türkiye
+node iptv/tools/build-playlist.js --countries tr --out iptv/playlists/turkiye.m3u
+
+# Tüm dünya
+node iptv/tools/build-playlist.js --out iptv/playlists/dunya.m3u
+
+# Yalnızca cevap veren yayınlar (kendi ağında çalıştır!)
+node iptv/tools/build-playlist.js --countries tr --validate --out temiz.m3u
+
+# Kategoriye göre, grupları kategori yap
+node iptv/tools/build-playlist.js --categories news,sports --group category --out haber.m3u
+```
+
+Araç kanal veritabanını da indirip listeyi zenginleştirir: logo, ülke, kategori.
+Kaynağın kendi engel listesindeki ve yetişkin içerikli kanallar varsayılan olarak
+dışarıda bırakılır.
+
+**`--validate` mutlaka kendi ağında koşmalı.** Hangi yayının açıldığı bulunduğun
+ülkeye, operatörüne ve saate göre değişir; başka bir makinede alınan sonuç seni
+yanıltır.
+
+### Kendi listeni eklemek
+
+**Ayarlar → Kanal listeleri**:
 
 - **M3U adresi** — sağlayıcının verdiği ya da kendi sunucundan aldığın
   `.m3u` / `.m3u8` bağlantısı.
@@ -196,8 +277,13 @@ iptv/
   js/app.js               durum, oynatıcı arayüzü, açılış
   sw.js                   servis çalışanı (yalnızca uygulama dosyaları)
   vendor/                 hls.js, mpegts.js
-  tools/server.js         yerel sunucu + yayın vekili
+  playlists/              hazır kanal listeleri (Türkiye, Dünya)
+  tools/server.js         yerel sunucu + yayın vekili (tarayıcı yolu için)
+  tools/build-playlist.js kanal listesi üretici
   tools/e2e-test.js       uçtan uca test (Playwright)
+  android/                Android TV uygulaması
+    app/src/main/java/.../MainActivity.java   WebView kabuğu, kumanda
+    app/src/main/java/.../LocalServer.java    gömülü HTTP sunucusu + vekil
 ```
 
 Kodun tamamı bilerek **ES5**'tir: `let`/`const`, ok fonksiyonu, şablon dizgesi,

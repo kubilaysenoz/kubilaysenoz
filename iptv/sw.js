@@ -1,7 +1,7 @@
 /* sw.js - yalnızca uygulama dosyalarini önbelleğe alir.
    Yayın akışları (.m3u8, .ts, segmentler) Hiç önbelleklenmez; canlı yayında
    eski parça sunmak donmaya yol açar. */
-var CACHE = 'takirtv-v1';
+var CACHE = 'nomads-iptv-v1';
 var SHELL = [
   './', './index.html',
   './css/app.css',

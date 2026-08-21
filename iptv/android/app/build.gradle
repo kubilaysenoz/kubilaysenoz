@@ -1,0 +1,71 @@
+plugins {
+    id 'com.android.application'
+}
+
+/*
+ * Web uygulaması (iptv/) derleme sırasında assets/web klasörüne kopyalanır.
+ * Böylece tek kaynak var: tarayıcıda ve APK'da aynı kod çalışır.
+ */
+def webRoot = file("${rootDir}/..")
+def generatedAssets = layout.buildDirectory.dir("generated/webassets")
+
+tasks.register('syncWebApp', Copy) {
+    description = 'iptv/ altındaki web uygulamasını APK varlıklarına kopyalar'
+    from(webRoot) {
+        include 'index.html'
+        include 'sw.js'
+        include 'manifest.webmanifest'
+        include 'css/**'
+        include 'js/**'
+        include 'vendor/**'
+        include 'playlists/**'
+    }
+    into generatedAssets.map { it.dir("web") }
+}
+
+android {
+    namespace 'industry.nomads.iptv'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "industry.nomads.iptv"
+        minSdk 21              // Android 5.0 — 2015 sonrası Philips Android TV'ler
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs += generatedAssets
+        }
+    }
+
+    buildTypes {
+        debug {
+            // sideload için yeterli: hata ayıklama anahtarıyla imzalanır
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            // CI imzasız üretir; istersen kendi anahtarınla imzala
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        abortOnError false
+    }
+
+    packagingOptions {
+        // .m3u dosyaları sıkıştırılabilir, sorun yok
+    }
+}
+
+/* preBuild bir varyantın ilk adımı; buraya bağlamak varlıkların
+   birleştirilmesinden önce kopyalanmasını garanti eder. */
+tasks.named('preBuild') { dependsOn 'syncWebApp' }

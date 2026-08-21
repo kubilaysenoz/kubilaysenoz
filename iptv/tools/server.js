@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * TakIR TV - yerel sunucu ve yayın vekili
+ * NOMADS INDUSTRY IPTV - yerel sunucu ve yayın vekili
  *
  *   node tools/server.js [--port 8080] [--host 0.0.0.0] [--token GIZLI]
  *
@@ -247,7 +247,7 @@ var server = http.createServer(function (req, res) {
   if (u.pathname === '/health') {
     cors(res);
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, app: 'takirtv-server', node: process.version }));
+    res.end(JSON.stringify({ ok: true, app: 'nomads-iptv-server', node: process.version }));
     return;
   }
 
@@ -268,7 +268,7 @@ server.listen(PORT, HOST, function () {
   });
 
   console.log('');
-  console.log('  TakIR TV sunucusu çalışıyor');
+  console.log('  NOMADS INDUSTRY IPTV sunucusu çalışıyor');
   console.log('  ---------------------------');
   console.log('  Klasör : ' + ROOT);
   console.log('  Yerel  : http://localhost:' + PORT + '/');

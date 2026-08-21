@@ -1,0 +1,66 @@
+name: APK derle
+
+# Elle çalıştırılabilir; iptv/ altında değişiklik olduğunda da kendiliğinden derler.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'iptv/**'
+      - '.github/workflows/android-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Android TV APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: JDK 17 kur
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v3
+
+      - name: Gradle kur
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.5'
+
+      - name: Web uygulamasını ve listeleri doğrula
+        run: |
+          set -e
+          for f in iptv/index.html iptv/js/app.js iptv/vendor/hls.min.js \
+                   iptv/vendor/mpegts.js iptv/playlists/turkiye.m3u iptv/playlists/dunya.m3u; do
+            test -s "$f" || { echo "eksik ya da boş: $f"; exit 1; }
+          done
+          for f in iptv/js/*.js iptv/sw.js iptv/tools/*.js; do node --check "$f"; done
+          echo "kanal sayısı: $(grep -c '^#EXTINF' iptv/playlists/dunya.m3u)"
+
+      - name: APK derle
+        working-directory: iptv/android
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: APK bilgisi
+        run: |
+          set -e
+          APK=$(find iptv/android/app/build/outputs/apk -name '*.apk' | head -1)
+          echo "APK: $APK  ($(du -h "$APK" | cut -f1))"
+          # gömülü web uygulaması gerçekten içeride mi?
+          unzip -l "$APK" | grep -E 'assets/web/(index.html|playlists/turkiye.m3u)' || {
+            echo "web uygulaması APK içine girmemiş"; exit 1; }
+
+      - name: APK'yı yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: nomads-industry-iptv-apk
+          path: iptv/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 90

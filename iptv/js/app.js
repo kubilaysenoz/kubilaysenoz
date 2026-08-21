@@ -220,7 +220,7 @@
     },
 
     confirmExit: function () {
-      UI.confirm('Çıkılsın mi?', 'TakIR TV kapatılacak.', function () {
+      UI.confirm('Çıkılsın mi?', 'NOMADS INDUSTRY IPTV kapatılacak.', function () {
         try { w.close(); } catch (e) {}
         try { if (w.tizen) w.tizen.application.getCurrentApplication().exit(); } catch (e2) {}
         UI.toast('Kumandadaki Çıkış/Home tuşunu kullan');
@@ -591,9 +591,11 @@
   var Setup = {
     sel: 0,
     items: [
+      { name: 'Türkiye paketini kur', desc: 'Hemen başla — 208 kanal, açık katalogdan derlendi' },
+      { name: 'Dünya paketini kur', desc: '175 ülke, 10.476 kanal' },
       { name: 'M3U adresi ekle', desc: 'Sağlayıcından ya da kendi sunucundan aldığın .m3u / .m3u8 bağlantısı' },
       { name: 'Xtream Codes hesabı ekle', desc: 'Sunucu adresi + kullanıcı adı + şifre' },
-      { name: 'Yasal kaynak nereden bulunur?', desc: 'Kısa açıklama' }
+      { name: 'Bu kanallar nereden geliyor?', desc: 'Kısa açıklama' }
     ],
 
     show: function () {
@@ -619,8 +621,10 @@
     },
 
     go: function () {
-      if (Setup.sel === 0) SettingsScreen.addM3U();
-      else if (Setup.sel === 1) SettingsScreen.addXtream();
+      if (Setup.sel === 0) { SettingsScreen.addBundled('turkiye'); Setup.afterAdd(); }
+      else if (Setup.sel === 1) { SettingsScreen.addBundled('dunya'); Setup.afterAdd(); }
+      else if (Setup.sel === 2) SettingsScreen.addM3U();
+      else if (Setup.sel === 3) SettingsScreen.addXtream();
       else {
         UI.modal({
           title: 'Yasal kanal listesi nereden gelir?',
@@ -633,11 +637,28 @@
             'listeler. Kullanmadan önce kendi ülkendeki durumunu kontrol et.</p>' +
             '<p style="margin-top:.7rem"><b>4. Ödediğin abonelik.</b> Sağlayıcın sana bir M3U bağlantısı ya da ' +
             'Xtream bilgileri verir; ikisini de bu uygulama destekler.</p>' +
-            '<p style="margin-top:.9rem" class="muted">Bu uygulama içerik sağlamaz, yalnızca senin verdiğin ' +
-            'adresi oynatır.</p>',
+            '<p style="margin-top:.9rem" class="muted">Uygulamayla gelen Türkiye ve Dünya paketleri ' +
+            'iptv-org açık kataloğundan derlenmiştir: yayıncıların herkese açık akışları. Şifreli/ücretli ' +
+            'kanalların korsan bağlantılarını içermez ve içeremez.</p>',
           actions: [{ label: 'Anladim' }]
         });
       }
+    },
+
+    /* paket kurulunca kurulum ekranından ana ekrana geç */
+    afterAdd: function () {
+      var tries = 0;
+      var t = w.setInterval(function () {
+        tries++;
+        if (App.channels.length) {
+          w.clearInterval(t);
+          Nav.removeByName('setup');
+          Main.setViews();
+          Main.show();
+        } else if (tries > 60) {
+          w.clearInterval(t);
+        }
+      }, 500);
     },
 
     onKey: function (key) {

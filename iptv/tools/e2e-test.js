@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * TakIR TV - uçtan uca test
+ * NOMADS INDUSTRY IPTV - uçtan uca test
  *
  *   npm i playwright
  *   node iptv/tools/e2e-test.js
@@ -30,7 +30,7 @@ catch (e) {
 }
 
 const APP_DIR = path.resolve(__dirname, '..');
-const WORK = fs.mkdtempSync(path.join(os.tmpdir(), 'takirtv-test-'));
+const WORK = fs.mkdtempSync(path.join(os.tmpdir(), 'nomads-iptv-test-'));
 const FIX = path.join(WORK, 'fixtures');
 const SHOT = path.join(WORK, 'shots');
 fs.mkdirSync(FIX, { recursive: true });
@@ -166,7 +166,7 @@ const fixtureServer = http.createServer((req, res) => {
     appServer.stdout.on('data', d => { serverOut += d.toString(); });
     appServer.stderr.on('data', d => { serverOut += d.toString(); });
     await new Promise(r => setTimeout(r, 1200));
-    check('tools/server.js ayakta', serverOut.indexOf('TakIR TV sunucusu') >= 0);
+    check('tools/server.js ayakta', serverOut.indexOf('NOMADS INDUSTRY IPTV sunucusu') >= 0);
 
     /* saglik ucu */
     const health = await new Promise((res2) => {
@@ -174,7 +174,7 @@ const fixtureServer = http.createServer((req, res) => {
         let b = ''; r.on('data', c => b += c); r.on('end', () => res2(b));
       }).on('error', () => res2(''));
     });
-    check('/health yanit veriyor', health.indexOf('takirtv-server') >= 0, health.trim());
+    check('/health yanit veriyor', health.indexOf('nomads-iptv-server') >= 0, health.trim());
 
     /* vekil testi: m3u8 yeniden yazma */
     const proxied = await new Promise((res2) => {
@@ -200,10 +200,10 @@ const fixtureServer = http.createServer((req, res) => {
 
     /* 4. liste tanimla ve yeniden yukle */
     await page.evaluate(() => {
-      localStorage.setItem('takirtv.playlists', JSON.stringify([
+      localStorage.setItem('nomads.playlists', JSON.stringify([
         { id: 'plTest', name: 'Test Listesi', type: 'm3u', url: 'http://127.0.0.1:8099/list.m3u', enabled: true, addedAt: Date.now() }
       ]));
-      localStorage.setItem('takirtv.settings', JSON.stringify({ epgUrl: 'http://127.0.0.1:8099/epg.xml', osdSeconds: 30 }));
+      localStorage.setItem('nomads.settings', JSON.stringify({ epgUrl: 'http://127.0.0.1:8099/epg.xml', osdSeconds: 30 }));
     });
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() =>
@@ -395,7 +395,7 @@ const fixtureServer = http.createServer((req, res) => {
     await page.keyboard.press('ArrowRight');
     const after = await page.evaluate(() => Settings.get('bufferSec'));
     check('ayar degeri ok tusuyla degisiyor', after !== before, before + ' -> ' + after);
-    const persisted = await page.evaluate(() => JSON.parse(localStorage.getItem('takirtv.settings')).bufferSec);
+    const persisted = await page.evaluate(() => JSON.parse(localStorage.getItem('nomads.settings')).bufferSec);
     check('ayar kalici olarak kaydedildi', persisted === after, String(persisted));
     await page.screenshot({ path: path.join(SHOT, '09-settings.png') });
 
@@ -449,6 +449,36 @@ const fixtureServer = http.createServer((req, res) => {
           afterPin.screen === 'player' && afterPin.top === 'player' && afterPin.ch === 'Test Video',
           afterPin.screen + '/' + afterPin.top + '/' + afterPin.ch);
     await page.evaluate(() => { Settings.set('pin', ''); Settings.set('lockedGroups', []); PlayerUI.close(); });
+
+    /* 14d. depoyla gelen hazir listeler gercekten yukleniyor mu */
+    const bundled = await page.evaluate(() => new Promise(resolve => {
+      var before = App.channels.length;
+      SettingsScreen.addBundled('turkiye');
+      var t = 0;
+      var iv = setInterval(function () {
+        t++;
+        var pl = Playlists.all().filter(function (p) { return p.url === 'playlists/turkiye.m3u'; })[0];
+        var n = pl ? App.countFor(pl.id) : 0;
+        if (n > 0 || t > 60) {
+          clearInterval(iv);
+          var sample = App.channels.filter(function (c) { return pl && c.plId === pl.id; })[0];
+          resolve({
+            count: n,
+            grew: App.channels.length > before,
+            name: sample ? sample.name : '',
+            logo: sample ? !!sample.logo : false,
+            group: sample ? sample.group : ''
+          });
+        }
+      }, 250);
+    }));
+    check('Türkiye paketi yüklendi', bundled.count > 150, bundled.count + ' kanal');
+    check('paket kanalları listeye eklendi', bundled.grew, bundled.name + ' / ' + bundled.group);
+    check('paket kanallarında logo var', bundled.logo);
+    await page.evaluate(() => {
+      var pl = Playlists.all().filter(function (p) { return p.url === 'playlists/turkiye.m3u'; })[0];
+      if (pl) { Playlists.remove(pl.id); App.refreshAll(false); }
+    });
 
     /* 15. overscan / olcek */
     await page.evaluate(() => { Settings.set('uiScale', 130); Settings.set('safeArea', 5); UI.applyScale(); });

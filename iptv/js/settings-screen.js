@@ -130,6 +130,15 @@
         f.push({ type: 'action', cls: 'fld-btn', name: '+ M3U adresi ekle', desc: 'http(s):// ile başlayan .m3u / .m3u8 adresi', fn: function () { SettingsScreen.addM3U(); } });
         f.push({ type: 'action', cls: 'fld-btn', name: '+ Xtream Codes hesabı ekle', desc: 'Sunucu, kullanıcı adı ve şifre ile', fn: function () { SettingsScreen.addXtream(); } });
         f.push({ type: 'action', cls: 'fld-btn', name: 'Tüm listeleri yenile', desc: 'Önbelleği atlayıp yeniden indirir', fn: function () { App.refreshAll(true); } });
+        f.push({ type: 'sep', name: 'Hazır listeler' });
+        f.push({ type: 'action', cls: 'fld-btn', name: '+ Türkiye paketi',
+                 desc: 'Uygulamayla gelen açık katalog — Türkiye kanalları',
+                 value: '208 kanal',
+                 fn: function () { SettingsScreen.addBundled('turkiye'); } });
+        f.push({ type: 'action', cls: 'fld-btn', name: '+ Dünya paketi',
+                 desc: 'Uygulamayla gelen açık katalog — 175 ülke',
+                 value: '10.476 kanal',
+                 fn: function () { SettingsScreen.addBundled('dunya'); } });
 
       } else if (id === 'epg') {
         f.push({ type: 'sep', name: 'Kaynak' });
@@ -233,7 +242,7 @@
       } else if (id === 'about') {
         var C = w.CAPS;
         f.push({ type: 'sep', name: 'Uygulama' });
-        f.push({ type: 'action', name: 'TakIR TV', value: App.VERSION, desc: 'Kumanda ile kullanılan M3U/Xtream oynatıcı', fn: function () {} });
+        f.push({ type: 'action', name: 'NOMADS INDUSTRY IPTV', value: App.VERSION, desc: 'Kumanda ile kullanılan M3U/Xtream oynatıcı', fn: function () {} });
         f.push({ type: 'action', name: 'Toplam kanal', value: String(App.channels.length), fn: function () {} });
         f.push({ type: 'action', name: 'Depolama kullanımı', value: UI.bytes(Store.usage()), fn: function () {} });
         f.push({ type: 'sep', name: 'Bu TV neyi destekliyor?' });
@@ -352,6 +361,36 @@
     },
 
     /* ---------------- liste ekleme / duzenleme ---------------- */
+    /* Depoyla birlikte gelen listeler. Adres göreli olduğu için uygulama
+       hangi sunucudan açıldıysa oradan okunur; CORS ve karışık içerik sorunu
+       çıkmaz. */
+    addBundled: function (which) {
+      var meta = {
+        turkiye: { name: 'Türkiye paketi', url: 'playlists/turkiye.m3u' },
+        dunya: { name: 'Dünya paketi', url: 'playlists/dunya.m3u' }
+      }[which];
+      if (!meta) return;
+      var all = Playlists.all();
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].url === meta.url) { UI.toast(meta.name + ' zaten ekli'); return; }
+      }
+      var p = Playlists.add({ name: meta.name, type: 'm3u', url: meta.url });
+      UI.toast(meta.name + ' ekleniyor...');
+      App.loadPlaylist(p, true, function (err) {
+        if (err) {
+          UI.modal({
+            title: 'Paket açılamadı',
+            text: err.message + '\n\nBu paket uygulamanın yanındaki playlists/ klasöründen okunur. ' +
+                  'Uygulamayı tools/server.js ile ya da GitHub Pages üzerinden açtığından emin ol.',
+            actions: [{ label: 'Kapat' }]
+          });
+          return;
+        }
+        SettingsScreen.paint();
+        App.refreshViews();
+      });
+    },
+
     addM3U: function () {
       UI.input({
         title: 'Liste adı', value: '', desc: 'Örnek: Ana liste',
