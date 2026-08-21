@@ -334,10 +334,12 @@ iptv/
   playlists/              hazır kanal listeleri (Türkiye, Dünya)
   tools/server.js         yerel sunucu + yayın vekili (tarayıcı yolu için)
   tools/build-playlist.js kanal listesi üretici
-  tools/e2e-test.js       uçtan uca test (Playwright)
+  tools/e2e-test.js       uçtan uca arayüz testi (Playwright)
+  tools/proxy-test.js     vekil sözleşme testi (iki uygulamaya da koşar)
   android/                Android TV uygulaması
     app/src/main/java/.../MainActivity.java   WebView kabuğu, kumanda
     app/src/main/java/.../LocalServer.java    gömülü HTTP sunucusu + vekil
+    jvmtest/                                 Java vekilini cihazsız koşturma
 ```
 
 Kodun tamamı bilerek **ES5**'tir: `let`/`const`, ok fonksiyonu, şablon dizgesi,
@@ -348,11 +350,52 @@ modern Android TV WebView'ini aynı anda desteklemenin en güvenli yolu budur.
 
 ## Test
 
+Üç ayrı test var; üçü de gerçek bir canlı yayına ihtiyaç duymaz.
+
+**1. Arayüz ve oynatıcı (57 kontrol)**
+
 ```bash
 npm i playwright
 node iptv/tools/e2e-test.js
 ```
 
-Test kendi kanal listesini, EPG'sini ve video dosyasını üretir; gerçek bir tarayıcıda
-uygulamayı açar, kumanda tuşlarını basar, video oynatır, bozuk yayınla hata
-kurtarma yolunu sınar ve 1280/1920/1366 genişliklerinde taşma olup olmadığına bakar.
+Kendi kanal listesini, EPG'sini ve video dosyasını üretir; gerçek bir tarayıcıda
+uygulamayı açar, kumanda tuşlarına basar, video oynatır, bozuk yayınla hata
+kurtarma yolunu sınar, hazır paketin yüklendiğini doğrular ve 1280/1920/1366
+genişliklerinde taşma olup olmadığına bakar.
+
+**2. Vekil sözleşmesi (21 kontrol × 2)**
+
+Vekil, gerçek IPTV'de en çok iş yapan parça: CORS, özel başlıklar, `.m3u8`
+yeniden yazma, `Range`, yönlendirme. İki ayrı uygulaması var — `tools/server.js`
+(Node) ve APK'nın içindeki `LocalServer.java` — ve ikisi de aynı sözleşmeyi
+tutmak zorunda. Aynı test ikisine de koşar:
+
+```bash
+# Node vekili
+node iptv/tools/server.js --port 8156 &
+node iptv/tools/proxy-test.js --proxy http://127.0.0.1:8156 --static
+
+# APK'nın içindeki Java vekili — Android cihaz gerekmez
+bash iptv/android/jvmtest/run.sh
+```
+
+İkincisi, `LocalServer.java`'yı düz JVM'de çalıştırır. Android'e bağlı olduğu
+iki sınıf (`AssetManager`, `Log`) `jvmtest/stubs/` altında taklit edilir; üretim
+kodu değişmez. Bu test, sunucunun kalıcı bağlantıları (keep-alive) yanlış
+yönettiğini ortaya çıkardı — o hata TV'de segmentlerin rastgele düşmesi olarak
+görünürdü.
+
+**3. APK bütünlüğü**
+
+`.github/workflows/android-apk.yml` her derlemede APK'nın içini açıp bakar:
+gömülü web uygulaması, iki yayın motoru, iki kanal paketi (kanal sayısı
+sayılarak) ve derlenmiş `MainActivity` / `LocalServer` sınıfları.
+
+### Test edilemeyen tek şey
+
+**Gerçek bir canlı yayının çözülüp ekrana gelmesi.** Bunun için gerçek cihaz
+gerekiyor: geliştirme ortamındaki tarayıcıda H.264 kodeki bulunmayabiliyor ve
+yayın sunucularına erişim kısıtlı olabiliyor. Yukarıdaki testler yayın
+zincirinin tamamını (liste → vekil → segment → oynatıcı motoru seçimi → hata
+kurtarma) kapsar; kapsamadıkları kısım yalnızca donanım çözücüsünün kendisidir.

@@ -75,48 +75,68 @@ class LocalServer implements Runnable {
 
     /* ----------------------------------------------------------- istek */
 
+    /**
+     * Tek bir bağlantıyı işler.
+     *
+     * HTTP/1.1'de bağlantılar varsayılan olarak kalıcıdır: istemci aynı soket
+     * üzerinden arka arkaya istek atar. Android WebView'in ağ yığını da böyle
+     * çalışır. Bu yüzden yanıttan sonra soketi kapatmak yetmez — kapatacaksak
+     * "Connection: close" demek, demiyorsak soketi açık tutup sıradaki isteği
+     * beklemek zorundayız. Aksi halde yeniden kullanılan soketteki istekler
+     * sessizce düşer; yayında bu, segmentlerin rastgele gelmemesi demektir.
+     *
+     * Soketi ancak yanıtın uzunluğu belli değilse (canlı akış) kapatıyoruz;
+     * orada zaten "Connection: close" gönderiliyor.
+     */
     private void handle(Socket client) {
         try {
             client.setSoTimeout(30000);
             InputStream in = client.getInputStream();
             OutputStream out = client.getOutputStream();
-
             BufferedReader r = new BufferedReader(new InputStreamReader(in, "UTF-8"), 8192);
-            String requestLine = r.readLine();
-            if (requestLine == null) { client.close(); return; }
 
-            String[] parts = requestLine.split(" ");
-            if (parts.length < 2) { client.close(); return; }
-            String method = parts[0];
-            String target = parts[1];
+            boolean keepAlive = true;
+            while (keepAlive) {
+                String requestLine = r.readLine();
+                if (requestLine == null) break;                 /* istemci kapattı */
+                if (requestLine.length() == 0) continue;        /* araya kaçan boş satır */
 
-            Map<String, String> headers = new HashMap<>();
-            String line;
-            while ((line = r.readLine()) != null && line.length() > 0) {
-                int c = line.indexOf(':');
-                if (c > 0) headers.put(line.substring(0, c).trim().toLowerCase(Locale.US),
-                                       line.substring(c + 1).trim());
-            }
+                String[] parts = requestLine.split(" ");
+                if (parts.length < 2) break;
+                String method = parts[0];
+                String target = parts[1];
 
-            if ("OPTIONS".equals(method)) {
-                writeHead(out, 204, "text/plain", -1, true, null);
+                Map<String, String> headers = new HashMap<>();
+                String line;
+                while ((line = r.readLine()) != null && line.length() > 0) {
+                    int c = line.indexOf(':');
+                    if (c > 0) headers.put(line.substring(0, c).trim().toLowerCase(Locale.US),
+                                           line.substring(c + 1).trim());
+                }
+
+                boolean clientWantsClose =
+                        "close".equalsIgnoreCase(String.valueOf(headers.get("connection")));
+
+                boolean framed;   /* yanıtın uzunluğu belli mi? belli değilse soket kapanmalı */
+                if ("OPTIONS".equals(method)) {
+                    writeHead(out, 204, "text/plain", 0, true, null);
+                    framed = true;
+                } else {
+                    String path = target;
+                    String query = "";
+                    int q = target.indexOf('?');
+                    if (q >= 0) { path = target.substring(0, q); query = target.substring(q + 1); }
+
+                    if (path.equals("/proxy")) {
+                        framed = doProxy(out, param(query, "url"), param(query, "ua"),
+                                         param(query, "ref"), headers.get("range"), 0);
+                    } else {
+                        framed = serveAsset(out, path, "HEAD".equals(method));
+                    }
+                }
                 out.flush();
-                client.close();
-                return;
+                keepAlive = framed && !clientWantsClose;
             }
-
-            String path = target;
-            String query = "";
-            int q = target.indexOf('?');
-            if (q >= 0) { path = target.substring(0, q); query = target.substring(q + 1); }
-
-            if (path.equals("/proxy")) {
-                doProxy(out, param(query, "url"), param(query, "ua"), param(query, "ref"),
-                        headers.get("range"), 0);
-            } else {
-                serveAsset(out, path, "HEAD".equals(method));
-            }
-            out.flush();
             client.close();
         } catch (Exception e) {
             try { client.close(); } catch (IOException ignored) {}
@@ -137,19 +157,19 @@ class LocalServer implements Runnable {
 
     /* ------------------------------------------------------ statik dosya */
 
-    private void serveAsset(OutputStream out, String path, boolean headOnly) throws IOException {
+    /** @return yanıtın uzunluğu belli mi (bağlantı açık tutulabilir mi) */
+    private boolean serveAsset(OutputStream out, String path, boolean headOnly) throws IOException {
         String rel = path;
         try { rel = URLDecoder.decode(path, "UTF-8"); } catch (Exception ignored) {}
         if (rel.equals("/") || rel.isEmpty()) rel = "/index.html";
         if (rel.startsWith("/")) rel = rel.substring(1);
-        if (rel.contains("..")) { writeError(out, 403, "Yasak"); return; }
+        if (rel.contains("..")) { return writeError(out, 403, "Yasak"); }
 
         InputStream is;
         try {
             is = assets.open("web/" + rel);
         } catch (IOException e) {
-            writeError(out, 404, "Bulunamadı: " + rel);
-            return;
+            return writeError(out, 404, "Bulunamadı: " + rel);
         }
 
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
@@ -161,6 +181,7 @@ class LocalServer implements Runnable {
 
         writeHead(out, 200, mime(rel), body.length, true, null);
         if (!headOnly) out.write(body);
+        return true;
     }
 
     private static String mime(String p) {
@@ -179,20 +200,19 @@ class LocalServer implements Runnable {
 
     /* ------------------------------------------------------------ vekil */
 
-    private void doProxy(OutputStream out, String url, String ua, String ref,
-                         String range, int depth) throws IOException {
-        if (depth > 5) { writeError(out, 508, "Çok fazla yönlendirme"); return; }
+    /** @return yanıtın uzunluğu belli mi (bağlantı açık tutulabilir mi) */
+    private boolean doProxy(OutputStream out, String url, String ua, String ref,
+                            String range, int depth) throws IOException {
+        if (depth > 5) return writeError(out, 508, "Çok fazla yönlendirme");
         if (url == null || !(url.startsWith("http://") || url.startsWith("https://"))) {
-            writeError(out, 400, "Yalnızca http/https adresleri");
-            return;
+            return writeError(out, 400, "Yalnızca http/https adresleri");
         }
 
         HttpURLConnection conn;
         try {
             conn = (HttpURLConnection) new URL(url).openConnection();
         } catch (Exception e) {
-            writeError(out, 400, "Geçersiz adres");
-            return;
+            return writeError(out, 400, "Geçersiz adres");
         }
         conn.setInstanceFollowRedirects(false);
         conn.setConnectTimeout(15000);
@@ -208,7 +228,7 @@ class LocalServer implements Runnable {
 
         int code;
         try { code = conn.getResponseCode(); }
-        catch (Exception e) { writeError(out, 502, "Bağlanılamadı: " + e.getMessage()); return; }
+        catch (Exception e) { return writeError(out, 502, "Bağlanılamadı: " + e.getMessage()); }
 
         if (code >= 300 && code < 400) {
             String loc = conn.getHeaderField("Location");
@@ -216,8 +236,7 @@ class LocalServer implements Runnable {
             if (loc != null) {
                 String next;
                 try { next = new URL(new URL(url), loc).toString(); } catch (Exception e) { next = loc; }
-                doProxy(out, next, ua, ref, range, depth + 1);
-                return;
+                return doProxy(out, next, ua, ref, range, depth + 1);
             }
         }
 
@@ -230,8 +249,8 @@ class LocalServer implements Runnable {
 
         InputStream body;
         try { body = code >= 400 ? conn.getErrorStream() : conn.getInputStream(); }
-        catch (Exception e) { writeError(out, 502, "Okunamadı: " + e.getMessage()); return; }
-        if (body == null) { writeError(out, 502, "Boş yanıt"); return; }
+        catch (Exception e) { return writeError(out, 502, "Okunamadı: " + e.getMessage()); }
+        if (body == null) return writeError(out, 502, "Boş yanıt");
 
         if (playlist) {
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
@@ -255,7 +274,7 @@ class LocalServer implements Runnable {
                 writeHead(out, code, ctype, raw.length, true, "no-cache, no-store");
                 out.write(raw);
             }
-            return;
+            return true;
         }
 
         int len = conn.getContentLength();
@@ -264,14 +283,20 @@ class LocalServer implements Runnable {
                   conn.getHeaderField("Accept-Ranges"));
         byte[] chunk = new byte[32768];
         int n;
+        long written = 0;
+        boolean complete = false;
         try {
-            while ((n = body.read(chunk)) > 0) out.write(chunk, 0, n);
+            while ((n = body.read(chunk)) > 0) { out.write(chunk, 0, n); written += n; }
+            complete = true;
         } catch (IOException ignored) {
             /* oynatıcı kanal değiştirdi; bağlantıyı kapatmak normal */
         } finally {
             try { body.close(); } catch (IOException ignored) {}
             conn.disconnect();
         }
+        /* Uzunluğu bilmiyorsak ya da tam yazamadıysak soket yeniden
+           kullanılamaz: sınırı istemci ancak kapanmadan anlayamaz. */
+        return complete && len >= 0 && written == len;
     }
 
     /** .m3u8 içindeki tüm adresleri vekile yönlendirir; segmentler de buradan geçsin. */
@@ -346,10 +371,11 @@ class LocalServer implements Runnable {
                   "Content-Range", contentRange, "Accept-Ranges", acceptRanges);
     }
 
-    private void writeError(OutputStream out, int code, String msg) throws IOException {
+    private boolean writeError(OutputStream out, int code, String msg) throws IOException {
         byte[] b = msg.getBytes("UTF-8");
         writeHead(out, code, "text/plain; charset=utf-8", b.length, true, null);
         out.write(b);
+        return true;   /* uzunluğu belli, bağlantı açık kalabilir */
     }
 
     private static String reason(int code) {

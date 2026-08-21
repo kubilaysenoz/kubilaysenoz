@@ -44,6 +44,22 @@ jobs:
           for f in iptv/js/*.js iptv/sw.js iptv/tools/*.js; do node --check "$f"; done
           echo "kanal sayısı: $(grep -c '^#EXTINF' iptv/playlists/dunya.m3u)"
 
+      # Vekil, gerçek IPTV'de en çok iş yapan ve en çok kırılan parça. İki ayrı
+      # uygulaması var (Node ve APK'nın içindeki Java) ve ikisi de aynı
+      # sözleşmeyi tutmak zorunda. Aynı test ikisine de koşuyor.
+      - name: Vekil sözleşme testi — Node
+        run: |
+          set -e
+          node iptv/tools/server.js --port 8156 --host 127.0.0.1 &
+          for i in $(seq 1 50); do
+            curl -sf -o /dev/null http://127.0.0.1:8156/index.html && break || sleep 0.2
+          done
+          node iptv/tools/proxy-test.js --proxy http://127.0.0.1:8156 \
+            --label "tools/server.js (Node)" --static
+
+      - name: Vekil sözleşme testi — Android LocalServer (JVM)
+        run: bash iptv/android/jvmtest/run.sh
+
       - name: APK derle
         working-directory: iptv/android
         run: gradle assembleDebug --no-daemon --stacktrace
