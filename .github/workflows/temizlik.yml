@@ -1,8 +1,10 @@
 name: Temizlik
 
-# Geçici iş. IPTV projesinin genel depodaki izlerini siler, sonra kendisi de silinir.
+# Geçici iş. IPTV projesinin genel depodaki izlerini siler, sonra kendisi silinir.
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/temizlik.yml']
 
 permissions:
   contents: write
