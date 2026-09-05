@@ -1,0 +1,41 @@
+name: Temizlik
+
+on:
+  push:
+    paths: ['.github/workflows/temizlik.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  temizle:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DAL: claude/iptv-philips-smart-tv-e7450j
+    steps:
+      - name: Once durum
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/releases" --jq '.[].tag_name' || true
+          gh api "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name'
+
+      - name: Release ve APK sil
+        run: |
+          gh release delete latest --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag \
+            && echo "release silindi" || echo "release yok"
+
+      - name: Etiket sil
+        run: |
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/tags/latest" \
+            && echo "etiket silindi" || echo "etiket yok"
+
+      - name: Sonra durum
+        run: |
+          echo "kalan release:"; gh api "repos/$GITHUB_REPOSITORY/releases" --jq '.[].tag_name' || true
+          echo "kalan etiket:"; gh api "repos/$GITHUB_REPOSITORY/tags" --jq '.[].name' || true
+
+      - name: Bu dali sil (en son)
+        run: |
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$DAL" \
+            && echo "dal silindi" || echo "dal silinemedi"
+          echo "kalan dallar:"; gh api "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name'
